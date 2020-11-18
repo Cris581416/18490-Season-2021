@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
-public class ExamplePController extends LinearOpMode {
+public class ExamplePIDController extends LinearOpMode {
     DcMotor motor;
     ElapsedTime timer;
 
