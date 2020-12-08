@@ -23,6 +23,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.opencv.core.Core;
@@ -53,6 +54,7 @@ public class RingDetector extends LinearOpMode
     final int FRAME_WIDTH = 320;
 
     OpenCvCamera webcam;
+    Servo servo;
 
     @Override
     public void runOpMode()
@@ -67,6 +69,8 @@ public class RingDetector extends LinearOpMode
          * the RC phone). If no camera monitor is desired, use the alternate
          * single-parameter constructor instead (commented out below)
          */
+        servo = hardwareMap.get(Servo.class, "servo1");
+
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
@@ -134,7 +138,7 @@ public class RingDetector extends LinearOpMode
             telemetry.addData("Pipeline time ms", webcam.getPipelineTimeMs());
             telemetry.addData("Overhead time ms", webcam.getOverheadTimeMs());
             telemetry.addData("Theoretical max FPS", webcam.getCurrentPipelineMaxFps());
-            telemetry.addData("Objects found: ", processor.returnMatCenterValue());
+            telemetry.addData("Tx: ", processor.getTx());
             telemetry.addData("Low H: ", processor.lowH);
             telemetry.addData("High H: ", processor.highH);
             telemetry.update();
@@ -181,6 +185,8 @@ public class RingDetector extends LinearOpMode
                 }
             }
 
+            // Set servo
+            servo.setPosition(0.5 + (processor.getTx()) / (FRAME_WIDTH / 2));
 
 
             /*
@@ -230,6 +236,8 @@ public class RingDetector extends LinearOpMode
         Mat hsvImg = new Mat();
         Mat thresholdedImg = new Mat();
 
+        // Center Point
+        Point center;
 
         int startGC = 50;
         int output;
@@ -287,7 +295,7 @@ public class RingDetector extends LinearOpMode
                 if(boundRect[i].area() > minSize) {
                     Imgproc.drawContours(drawing, contoursPolyList, i, color);
                     Imgproc.rectangle(drawing, boundRect[i].tl(), boundRect[i].br(), color, 2);
-                    Point center = new Point((boundRect[i].tl().x + boundRect[i].br().x) / 2, (boundRect[i].tl().y + boundRect[i].br().y) / 2);
+                    center = new Point((boundRect[i].tl().x + boundRect[i].br().x) / 2, (boundRect[i].tl().y + boundRect[i].br().y) / 2);
                     Imgproc.rectangle(drawing, new Point(center.x - centerSize, center.y - centerSize),
                             new Point(center.x + centerSize, center.y + centerSize), new Scalar(255, 255, 255), Imgproc.FILLED);
                     output += 1;
@@ -315,8 +323,14 @@ public class RingDetector extends LinearOpMode
             return drawing;
         }
 
-        public String returnMatCenterValue(){
-            return String.valueOf(output);
+        public double centerX(){
+            if(center != null){
+                return center.x;
+            } else return FRAME_WIDTH / 2;
+        }
+
+        public double getTx(){
+            return centerX() - (double)(FRAME_WIDTH / 2);
         }
 
         public double getHeight(){
