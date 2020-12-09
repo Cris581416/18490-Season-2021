@@ -23,6 +23,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -54,7 +56,12 @@ public class RingDetector extends LinearOpMode
     final int FRAME_WIDTH = 320;
 
     OpenCvCamera webcam;
-    Servo servo;
+    //Servo servo;
+
+    DcMotor tLMotor;
+    DcMotor tRMotor;
+    DcMotor bLMotor;
+    DcMotor bRMotor;
 
     @Override
     public void runOpMode()
@@ -69,7 +76,13 @@ public class RingDetector extends LinearOpMode
          * the RC phone). If no camera monitor is desired, use the alternate
          * single-parameter constructor instead (commented out below)
          */
-        servo = hardwareMap.get(Servo.class, "servo1");
+        //servo = hardwareMap.get(Servo.class, "servo1");
+        tLMotor = hardwareMap.get(DcMotor.class, "tL");
+        tRMotor = hardwareMap.get(DcMotor.class, "tR");
+        bLMotor = hardwareMap.get(DcMotor.class, "bL");
+        bRMotor = hardwareMap.get(DcMotor.class, "bR");
+
+        //tRMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
@@ -132,16 +145,15 @@ public class RingDetector extends LinearOpMode
             /*
              * Send some stats to the telemetry
              */
-            telemetry.addData("Frame Count", webcam.getFrameCount());
+            /* telemetry.addData("Frame Count", webcam.getFrameCount());
             telemetry.addData("FPS", String.format("%.2f", webcam.getFps()));
             telemetry.addData("Total frame time ms", webcam.getTotalFrameTimeMs());
             telemetry.addData("Pipeline time ms", webcam.getPipelineTimeMs());
             telemetry.addData("Overhead time ms", webcam.getOverheadTimeMs());
-            telemetry.addData("Theoretical max FPS", webcam.getCurrentPipelineMaxFps());
+            telemetry.addData("Theoretical max FPS", webcam.getCurrentPipelineMaxFps()); */
             telemetry.addData("Tx: ", processor.getTx());
             telemetry.addData("Low H: ", processor.lowH);
             telemetry.addData("High H: ", processor.highH);
-            telemetry.update();
 
             /*
              * NOTE: stopping the stream from the camera early (before the end of the OpMode
@@ -175,20 +187,75 @@ public class RingDetector extends LinearOpMode
 
             if(gamepad1.b){
                 if(processor.highH > 0){
-                    processor.highH -= 10;
+                    processor.highH -= 5;
                 }
             }
 
             if(gamepad1.x){
                 if(processor.lowH < 180){
-                    processor.lowH += 10;
+                    processor.lowH += 5;
+                }
+            }
+
+            if(gamepad1.left_bumper){
+                if(processor.lowH > 0){
+                    processor.lowH -= 5;
+                }
+            }
+
+            if(gamepad1.right_bumper){
+                if(processor.highH < 180){
+                    processor.highH += 5;
                 }
             }
 
             // Set servo
-            servo.setPosition(0.5 + (processor.getTx()) / (FRAME_WIDTH / 2));
+            //servo.setPosition(0.5 + (processor.getTx()) / (FRAME_WIDTH / 2));
+            double tLSpeed;
+            double bLSpeed;
+            double tRSpeed;
+            double bRSpeed;
 
+            if(gamepad1.y) {
+                double driveSpeed = (processor.getTx()) / (FRAME_WIDTH / 2) / 2;
+                if (processor.getTx() == 0) {
+                    driveSpeed = 0;
+                }
+                telemetry.addData("Tx Drive Speed: ", driveSpeed);
 
+                tLSpeed = -driveSpeed - -gamepad1.left_stick_y;
+                bLSpeed = -driveSpeed - -gamepad1.left_stick_y;
+
+                tRSpeed = driveSpeed - -gamepad1.left_stick_y;
+                bRSpeed = -driveSpeed - gamepad1.left_stick_y;
+            } else{
+                double r = Math.hypot(-gamepad1.left_stick_x, gamepad1.left_stick_y);
+                double robotAngle = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
+                double rightX = -gamepad1.right_stick_x;
+
+                tLSpeed = (r * Math.cos(robotAngle) + rightX);
+                tRSpeed = (r * Math.sin(robotAngle) - rightX);
+                bLSpeed = (r * Math.sin(robotAngle) + rightX);
+                bRSpeed = (r * Math.cos(robotAngle) - rightX);
+
+                tLMotor.setPower(tLSpeed);
+                tRMotor.setPower(tRSpeed);
+                bLMotor.setPower(bLSpeed);
+                bRMotor.setPower(bRSpeed);
+            }
+
+            telemetry.addData("tlSpeed: ", tLSpeed);
+            telemetry.addData("bLSpeed", bLSpeed);
+            telemetry.addData("tRSpeed", tRSpeed);
+            telemetry.addData("bRSpeed", bRSpeed);
+
+            tLMotor.setPower(tLSpeed);
+            bLMotor.setPower(bLSpeed);
+
+            tRMotor.setPower(tRSpeed);
+            bRMotor.setPower(bRSpeed);
+
+            telemetry.update();
             /*
              * For the purposes of this sample, throttle ourselves to 10Hz loop to avoid burning
              * excess CPU cycles for no reason. (By default, telemetry is only sent to the DS at 4Hz
@@ -228,7 +295,8 @@ public class RingDetector extends LinearOpMode
         private Size BLUR_SIZE = new Size(4,4);
         private int lowThresh = 0;
         private int centerSize = 4;
-        double minSize = Math.pow(80, 2);
+        double minWidth = 80;
+        double minHeight = 80;
         Random rng = new Random(12345);
 
         // Random Mats
@@ -292,7 +360,7 @@ public class RingDetector extends LinearOpMode
             Mat drawing = Mat.zeros(new Size(FRAME_WIDTH, FRAME_HEIGHT), CvType.CV_8UC3);
             for (int i = 0; i < contours.size(); i++) {
                 Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
-                if(boundRect[i].area() > minSize) {
+                if(boundRect[i].width >= minWidth && boundRect[i].height >= minHeight) {
                     Imgproc.drawContours(drawing, contoursPolyList, i, color);
                     Imgproc.rectangle(drawing, boundRect[i].tl(), boundRect[i].br(), color, 2);
                     center = new Point((boundRect[i].tl().x + boundRect[i].br().x) / 2, (boundRect[i].tl().y + boundRect[i].br().y) / 2);
