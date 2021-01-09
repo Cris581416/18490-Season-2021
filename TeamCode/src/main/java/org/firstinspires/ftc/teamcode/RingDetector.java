@@ -47,6 +47,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.firstinspires.ftc.teamcode.utilclasses.Drivetrain;
+
 import java.math.*;
 
 @TeleOp
@@ -62,6 +64,8 @@ public class RingDetector extends LinearOpMode
     DcMotor tRMotor;
     DcMotor bLMotor;
     DcMotor bRMotor;
+
+    Drivetrain drivetrain;
 
     @Override
     public void runOpMode()
@@ -81,6 +85,8 @@ public class RingDetector extends LinearOpMode
         tRMotor = hardwareMap.get(DcMotor.class, "tR");
         bLMotor = hardwareMap.get(DcMotor.class, "bL");
         bRMotor = hardwareMap.get(DcMotor.class, "bR");
+
+        drivetrain = new Drivetrain(tLMotor, tRMotor, bLMotor, bRMotor);
 
         //tRMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -211,49 +217,14 @@ public class RingDetector extends LinearOpMode
 
             // Set servo
             //servo.setPosition(0.5 + (processor.getTx()) / (FRAME_WIDTH / 2));
-            double tLSpeed;
-            double bLSpeed;
-            double tRSpeed;
-            double bRSpeed;
 
             if(gamepad1.y) {
                 double driveSpeed = (processor.getTx()) / (FRAME_WIDTH / 2) / 2;
-                if (processor.getTx() == 0) {
-                    driveSpeed = 0;
-                }
                 telemetry.addData("Tx Drive Speed: ", driveSpeed);
-
-                tLSpeed = -driveSpeed - -gamepad1.left_stick_y;
-                bLSpeed = -driveSpeed - -gamepad1.left_stick_y;
-
-                tRSpeed = driveSpeed - -gamepad1.left_stick_y;
-                bRSpeed = -driveSpeed - gamepad1.left_stick_y;
+                drivetrain.arcadeDrive(gamepad1.left_stick_y, driveSpeed);
             } else{
-                double r = Math.hypot(-gamepad1.left_stick_x, gamepad1.left_stick_y);
-                double robotAngle = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
-                double rightX = -gamepad1.right_stick_x;
-
-                tLSpeed = (r * Math.cos(robotAngle) + rightX);
-                tRSpeed = (r * Math.sin(robotAngle) - rightX);
-                bLSpeed = (r * Math.sin(robotAngle) + rightX);
-                bRSpeed = (r * Math.cos(robotAngle) - rightX);
-
-                tLMotor.setPower(tLSpeed);
-                tRMotor.setPower(tRSpeed);
-                bLMotor.setPower(bLSpeed);
-                bRMotor.setPower(bRSpeed);
+                drivetrain.straferDrive(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
             }
-
-            telemetry.addData("tlSpeed: ", tLSpeed);
-            telemetry.addData("bLSpeed", bLSpeed);
-            telemetry.addData("tRSpeed", tRSpeed);
-            telemetry.addData("bRSpeed", bRSpeed);
-
-            tLMotor.setPower(tLSpeed);
-            bLMotor.setPower(bLSpeed);
-
-            tRMotor.setPower(tRSpeed);
-            bRMotor.setPower(bRSpeed);
 
             telemetry.update();
             /*
