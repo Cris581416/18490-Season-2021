@@ -17,18 +17,17 @@ public class Drivetrain {
     }
 
     public void straferDrive(double xspeed, double yspeed, double turnSpeed){
-        double r = Math.hypot(-xspeed, yspeed);
-        double robotAngle = Math.atan2(yspeed, -xspeed) - Math.PI / 4;
-        double rightX = -turnSpeed;
+        double r = Math.hypot(xspeed, -yspeed);
+        double robotAngle = Math.atan2(-yspeed, xspeed) - Math.PI / 4;
 
-        double tLSpeed = (r * Math.cos(robotAngle) + rightX);
-        double tRSpeed = (r * Math.sin(robotAngle) - rightX);
-        double bLSpeed = (r * Math.sin(robotAngle) + rightX);
-        double bRSpeed = (r * Math.cos(robotAngle) - rightX);
+        double tLSpeed = (r * Math.cos(robotAngle) + turnSpeed);
+        double tRSpeed = (r * Math.sin(robotAngle) - turnSpeed);
+        double bLSpeed = (r * Math.sin(robotAngle) + turnSpeed);
+        double bRSpeed = (r * Math.cos(robotAngle) - turnSpeed);
 
-        tLMotor.setPower(tLSpeed);
+        tLMotor.setPower(-tLSpeed);
         tRMotor.setPower(tRSpeed);
-        bLMotor.setPower(bLSpeed);
+        bLMotor.setPower(-bLSpeed);
         bRMotor.setPower(bRSpeed);
     }
 

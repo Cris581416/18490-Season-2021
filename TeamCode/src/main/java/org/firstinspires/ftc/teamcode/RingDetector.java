@@ -224,6 +224,9 @@ public class RingDetector extends LinearOpMode
                 drivetrain.arcadeDrive(gamepad1.left_stick_y, driveSpeed);
             } else{
                 drivetrain.straferDrive(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+                telemetry.addData("Left Y: ", gamepad1.left_stick_y);
+                telemetry.addData("Left X: ", gamepad1.left_stick_x);
+                telemetry.addData("Right X: ", gamepad1.right_stick_x);
             }
 
             telemetry.update();
