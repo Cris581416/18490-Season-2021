@@ -21,6 +21,7 @@ package org.firstinspires.ftc.teamcode;
  * SOFTWARE.
  */
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -46,6 +47,7 @@ import java.util.Random;
 
 
 @TeleOp
+@Disabled
 public class CameraStreamDisplayTest extends LinearOpMode
 {
     OpenCvCamera webcam;

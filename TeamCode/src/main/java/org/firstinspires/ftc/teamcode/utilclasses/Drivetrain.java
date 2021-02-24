@@ -40,4 +40,8 @@ public class Drivetrain {
         bLMotor.setPower(leftSpeed);
         bRMotor.setPower(rightSpeed);
     }
+
+    public void stop(){
+        arcadeDrive(0.0, 0.0);
+    }
 }
